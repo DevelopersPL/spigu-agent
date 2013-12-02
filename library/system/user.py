@@ -90,7 +90,7 @@ class User(object):
     def info(self):
         """
         http://docs.python.org/dev/library/pwd.html
-        returns tuple: name, password, uid, gid, gecos, dir, shell
+        returns tuple: name, password, uid, gid, gecos, home dir, shell
         """
         if not self.exists():
             return False

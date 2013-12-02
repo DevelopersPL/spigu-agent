@@ -1,23 +1,14 @@
+import os
 from agent import agent
 from library.system.user import User
 from celery.utils.log import get_task_logger
-
+import library.basic
 logger = get_task_logger(__name__)
 
 @agent.task
 def add(x, y):
     logger.info('Adding {0} + {1}'.format(x, y))
     return x + y
-
-
-@agent.task
-def mul(x, y):
-    return x * y
-
-
-@agent.task
-def xsum(numbers):
-    return sum(numbers)
 
 @agent.task
 def WebAccount(AccountObject):
@@ -41,15 +32,12 @@ def WebAccount(AccountObject):
                     'groups_in': ['web'],
                     'groups_out': []}
 
-        if AccountObject.get('false_shell', False):
-            user_obj['shell'] = '/bin/false'
-        else:
-            user_obj['shell'] = '/bin/bash'
-
         if AccountObject.get('sftp_only', False):
             user_obj['groups_in'].append('sftponly')
+            user_obj['shell'] = '/usr/sbin/nologin'
         else:
             user_obj['groups_out'].append('sftponly')
+            user_obj['shell'] = '/bin/bash'
 
         if AccountObject['state'] == 'active':
             user_obj['expires'] = ''
@@ -67,6 +55,16 @@ def WebAccount(AccountObject):
             logger.info('Modifying user: ' + user.username)
             user.modify()
 
+        if AccountObject.get('sftp_only', False):
+            os.chown(user.info()[5], 0, user.info()[3])
+            os.chmod(user.info()[5], 0750)
+        else:
+            os.chown(user.info()[5], user.info()[2], user.info()[3])
+
+        # Make sure domains directory exists
+        library.basic.make_sure_path_exists(user.info()[5] + '/domains')
+        os.chown(user.info()[5] + '/domains', user.info()[2], user.info()[3])
+        os.chmod(user.info()[5] + '/domains', 0555)
 
     # deal with vhosts
     # deal with apps

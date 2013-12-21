@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<virtualHostConfig>
+    <docRoot>{{ homedir }}/domains/{{ name }}</docRoot>
+    <adminEmails></adminEmails>
+    <enableGzip>1</enableGzip>
+    <enableIpGeo></enableIpGeo>
+
+    <logging>
+        <log>
+            <useServer>0</useServer>
+            <fileName>/var/log/lsws/{{username}}_{{name}}_error.log</fileName>
+            <logLevel>DEBUG</logLevel>
+            <rollingSize>10M</rollingSize>
+        </log>
+        <accessLog>
+            <useServer>0</useServer>
+            <fileName>/var/log/lsws/{{username}}_{{name}}_access.log</fileName>
+            <pipedLogger></pipedLogger>
+            <logFormat></logFormat>
+            <logHeaders>3</logHeaders>
+            <rollingSize>10M</rollingSize>
+            <keepDays>30</keepDays>
+            <bytesLog></bytesLog>
+            <compressArchive>1</compressArchive>
+        </accessLog>
+    </logging>
+
+    <index>
+        <useServer>0</useServer>
+        <indexFiles>{{index_files}}</indexFiles>
+        <autoIndex>0</autoIndex>
+        <autoIndexURI>/_autoindex/default.php</autoIndexURI>
+    </index>
+
+    <customErrorPages>
+        <errorPage>
+            <errCode>503</errCode>
+            <url>/internal-errors/error503</url>
+        </errorPage>
+    </customErrorPages>
+
+    <htAccess>
+        <allowOverride>31</allowOverride>
+        <accessFileName>.htaccess</accessFileName>
+    </htAccess>
+
+    <expires>
+        <enableExpires>1</enableExpires>
+        <expiresDefault></expiresDefault>
+        <expiresByType>image/*=A604800, text/css=A604800, application/x-javascript=A604800, application/javascript=A604800</expiresByType>
+    </expires>
+
+    <apacheConf></apacheConf>
+
+    <security>
+        <hotlinkCtrl>
+            <enableHotlinkCtrl>0</enableHotlinkCtrl>
+            <suffixes>gif, jpeg, jpg, png, rar, zip, flv, avi, mp3, mp4, pdf, doc, docx</suffixes>
+            <redirectUri></redirectUri>
+            <allowDirectAccess>1</allowDirectAccess>
+            <onlySelf>1</onlySelf>
+            <allowedHosts></allowedHosts>
+            <matchedHosts></matchedHosts>
+        </hotlinkCtrl>
+        <accessControl>
+            <allow>*</allow>
+            <deny></deny>
+        </accessControl>
+    </security>
+
+    <extProcessorList>
+        {#
+        <extProcessor>
+            <type>lsapi</type>
+            <name>lsphp5_{{username}}_{{name}}</name>
+            <address>uds://tmp/lshttpd/lsphp5_{{username}}_{{name}}.sock</address>
+            <note/>
+            <maxConns>{{threads}}</maxConns>
+            <env>PHP_LSAPI_MAX_REQUESTS=500</env>
+            <env>PHP_LSAPI_CHILDREN='.$phpthreads.'</env>
+            <env>LSAPI_AVOID_FORK=1</env>
+            <env>LSAPI_MAX_IDLE=300</env>
+            <env>LSAPI_ACCEPT_NOTIFY=0</env>
+            <env>PHP_INI_SCAN_DIR=/usr/local/directadmin/data/users/'.$vhost['user'].'/uconfig/'.$vhost['domain'].'/php.conf.d/</env>
+            <initTimeout>60</initTimeout>
+            <retryTimeout>0</retryTimeout>
+            <persistConn>1</persistConn>
+            <pcKeepAliveTimeout/>
+            <respBuffer>0</respBuffer>
+            <autoStart>1</autoStart>
+            <path>/opt/php/php-'.$vhost['uconfig']['phpversion'].'/bin/lsphp</path>
+            <backlog>10</backlog>
+            <instances>1</instances>
+            <extUser>'.$vhost['user'].'</extUser>
+            <extGroup>'.$vhost['user'].'</extGroup>
+            <runOnStartUp/>
+            <extMaxIdleTime>-1</extMaxIdleTime>
+            <priority>0</priority>
+            <memSoftLimit>6G</memSoftLimit>
+            <memHardLimit>8G</memHardLimit>
+            <procSoftLimit>800</procSoftLimit>
+            <procHardLimit>1000</procHardLimit>
+        </extProcessor>
+        #}
+    </extProcessorList>
+
+    <scriptHandlerList>
+    {% for mapping in appmap %}
+        <scriptHandler>
+            <suffix>{{mapping.extension}}</suffix>
+            <type>lsapi</type>
+            <handler>lsphp5_{{username}}_{{mapping.app}}</handler>
+        </scriptHandler>
+    {% endfor %}
+    </scriptHandlerList>
+
+    <contextList>
+    {% if cgi %}
+        <context>
+            <type>cgi</type>
+            <uri>/cgi-bin/</uri>
+            <location>{{ homedir }}/domains/{{ name }}/cgi-bin</location>
+            <note></note>
+            <extraHeaders></extraHeaders>
+            <allowSetUID></allowSetUID>
+            <allowOverride></allowOverride>
+            <realm></realm>
+            <authName></authName>
+            <required></required>
+            <accessControl>
+                <allow></allow>
+                <deny></deny>
+            </accessControl>
+            <authorizer></authorizer>
+            <addDefaultCharset>off</addDefaultCharset>
+            <defaultCharsetCustomized></defaultCharsetCustomized>
+            <rewrite>
+                <enable></enable>
+                <inherit></inherit>
+                <base></base>
+                <rules></rules>
+            </rewrite>
+            <enableIpGeo></enableIpGeo>
+            <apacheConf></apacheConf>
+        </context>
+    {% endif %}
+    </contextList>
+
+    <rewrite>
+        <enable>1</enable>
+        <logLevel>0</logLevel>
+        <rules></rules>
+    </rewrite>
+
+    {% if ssl %}
+    <vhssl>
+        <keyFile>'.$vhost['domainconf']['SSLCertificateKeyFile'].'</keyFile>
+        <certFile>'.$vhost['domainconf']['SSLCertificateFile'].'</certFile>
+        <certChain>'.($vhost['domainconf']['SSLCACertificateFile']?'1':'0').'</certChain>
+        <CACertPath></CACertPath>
+        <CACertFile>'.$vhost['domainconf']['SSLCACertificateFile'].'</CACertFile>
+        <clientVerify>0</clientVerify>
+        <verifyDepth></verifyDepth>
+        <crlPath></crlPath>
+        <crlFile></crlFile>
+        <renegProtection></renegProtection>
+        <ciphers>SSLv3:HIGH:MEDIUM:!aNULL:!MD5:!SSLv2:!eNULL:!EDH</ciphers>
+    </vhssl>';
+    {% endif %}
+
+    <frontPage>
+        <enable>0</enable>
+        <disableAdmin>0</disableAdmin>
+        <domainNames></domainNames>
+    </frontPage>
+
+    <awstats>
+        <updateMode>0</updateMode>
+        <workingDir>$VH_ROOT/awstats</workingDir>
+        <awstatsURI>/awstats/</awstatsURI>
+        <siteDomain>localhost</siteDomain>
+        <siteAliases>127.0.0.1 localhost</siteAliases>
+        <updateInterval>86400</updateInterval>
+        <updateOffset>0</updateOffset>
+    </awstats>
+
+</virtualHostConfig>

@@ -28,3 +28,5 @@ CELERY_ACKS_LATE = True
 
 # Send events so the worker can be monitored by tools like celerymon.
 CELERY_SEND_EVENTS = True
+
+CELERY_DISABLE_RATE_LIMITS = True

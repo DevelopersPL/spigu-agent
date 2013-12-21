@@ -1,20 +1,27 @@
+# -*- coding: utf-8 -*-
 import os
+import time
 from agent import agent
 from library.system.user import User
 from celery.utils.log import get_task_logger
 import library.basic
 logger = get_task_logger(__name__)
+from templates import vhost_template
+import config
+from lxml import etree
 
 @agent.task
 def add(x, y):
     logger.info('Adding {0} + {1}'.format(x, y))
+    logger.info('Waiting 10 seconds')
+    time.sleep(10)
     return x + y
 
-@agent.task
-def WebAccount(AccountObject):
+@agent.task(throws=(KeyError), bind=True)
+def WebAccount(self, **AccountObject):
     logger.info(repr(AccountObject))
 
-    ##### deal with system account #####
+    ############################### deal with system account ###############################
     # Validate state
     if AccountObject['state'] not in ['active', 'locked', 'suspended', 'deleted']:
         raise Exception('Unrecognized WebAccount state value: ' + AccountObject['state'])
@@ -66,7 +73,36 @@ def WebAccount(AccountObject):
         os.chown(user.info()[5] + '/domains', user.info()[2], user.info()[3])
         os.chmod(user.info()[5] + '/domains', 0555)
 
-    # deal with vhosts
+    ############################### deal with vhosts ###############################
+    for vhost in AccountObject['vhosts']:
+        # Create domain directory
+        library.basic.make_sure_path_exists(user.info()[5] + '/domains/' + vhost['name'])
+        os.chown(user.info()[5] + '/domains/' + vhost['name'], user.info()[2], user.info()[3])
+        os.chmod(user.info()[5] + '/domains', 0555)
+
+        # So called environment for jinja2 template
+        vhost_data = {
+            "username": user.username,
+            "homedir": user.info()[5],
+            "name": vhost['name'],
+            "index_files": "index.php, index.html",
+            "appmap": vhost['appmap']
+        }
+        with open(config.LSWS_VHOST_DIR + user.username + '_' + vhost['name'] + '.xml', 'w') as vhost_file:
+            vhost_file.write(vhost_template.render(vhost_data))
+            vhost_file.close()
+
+        # add the vhost to main config
+        httpd_config = etree.parse(config.LSWS_CONFIG_PATH)
+        # print etree.tostring(httpd_config, pretty_print=True)
+
+        # look for the vhost in config
+
+        # save global config
+        httpd_config.write(config.LSWS_CONFIG_PATH, xml_declaration=True, pretty_print=True, encoding="UTF-8")
+
+
+
     # deal with apps
     # deal with MySQL databases
 

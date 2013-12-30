@@ -69,39 +69,6 @@
     </security>
 
     <extProcessorList>
-        {#
-        <extProcessor>
-            <type>lsapi</type>
-            <name>lsphp5_{{username}}_{{name}}</name>
-            <address>uds://tmp/lshttpd/lsphp5_{{username}}_{{name}}.sock</address>
-            <note/>
-            <maxConns>{{threads}}</maxConns>
-            <env>PHP_LSAPI_MAX_REQUESTS=500</env>
-            <env>PHP_LSAPI_CHILDREN='.$phpthreads.'</env>
-            <env>LSAPI_AVOID_FORK=1</env>
-            <env>LSAPI_MAX_IDLE=300</env>
-            <env>LSAPI_ACCEPT_NOTIFY=0</env>
-            <env>PHP_INI_SCAN_DIR=/usr/local/directadmin/data/users/'.$vhost['user'].'/uconfig/'.$vhost['domain'].'/php.conf.d/</env>
-            <initTimeout>60</initTimeout>
-            <retryTimeout>0</retryTimeout>
-            <persistConn>1</persistConn>
-            <pcKeepAliveTimeout/>
-            <respBuffer>0</respBuffer>
-            <autoStart>1</autoStart>
-            <path>/opt/php/php-'.$vhost['uconfig']['phpversion'].'/bin/lsphp</path>
-            <backlog>10</backlog>
-            <instances>1</instances>
-            <extUser>'.$vhost['user'].'</extUser>
-            <extGroup>'.$vhost['user'].'</extGroup>
-            <runOnStartUp/>
-            <extMaxIdleTime>-1</extMaxIdleTime>
-            <priority>0</priority>
-            <memSoftLimit>6G</memSoftLimit>
-            <memHardLimit>8G</memHardLimit>
-            <procSoftLimit>800</procSoftLimit>
-            <procHardLimit>1000</procHardLimit>
-        </extProcessor>
-        #}
     </extProcessorList>
 
     <scriptHandlerList>
@@ -109,7 +76,7 @@
         <scriptHandler>
             <suffix>{{mapping.extension}}</suffix>
             <type>lsapi</type>
-            <handler>lsphp5_{{username}}_{{mapping.app}}</handler>
+            <handler>{{username}}_{{mapping.app|strtosafe}}</handler>
         </scriptHandler>
     {% endfor %}
     </scriptHandlerList>

@@ -12,3 +12,5 @@ if __name__ == '__main__':
 
 # http://docs.celeryproject.org/en/latest/userguide/workers.html#persistent-revokes
 # --statedb=/var/run/celery/worker.state
+
+# /usr/local/spigu/agent.py --loglevel=info --autoreload --statedb=/tmp/spigu-agent.state

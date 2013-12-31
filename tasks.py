@@ -12,6 +12,7 @@ from lxml import etree
 import library.basic as basic
 from templates import strtosafe
 import re
+import ConfigParser
 
 @agent.task
 def add(x, y):
@@ -22,7 +23,7 @@ def add(x, y):
 
 @agent.task(throws=(KeyError), bind=True)
 def WebAccount(self, **AccountObject):
-    logger.info(repr(AccountObject))
+    #logger.info(repr(AccountObject))
 
     ############################### deal with system account ###############################
     # Validate state
@@ -81,100 +82,112 @@ def WebAccount(self, **AccountObject):
         os.chmod(user.info()[5] + '/domains', 0555)
 
     ############################### deal with vhosts ###############################
-    for vhost in AccountObject['vhosts']:
-        # Create domain directory
-        library.basic.make_sure_path_exists(user.info()[5] + '/domains/' + vhost['name'])
-        os.chown(user.info()[5] + '/domains/' + vhost['name'], user.info()[2], user.info()[3])
-        os.chmod(user.info()[5] + '/domains', 0555)
+    # Delete all vhost configs
+    existing_vhosts = os.listdir(config.LSWS_VHOST_DIR)
+    for file in existing_vhosts:
+        if re.compile('^' + user.username + '_(.*)\.xml$').match(file):
+            os.remove(os.path.join(config.LSWS_VHOST_DIR, file))
 
-        # So called environment for jinja2 template
-        vhost_data = {
-            "username": user.username,
-            "homedir": user.info()[5],
-            "name": vhost['name'],
-            "index_files": "index.php, index.html",
-            "appmap": vhost['appmap']
-        }
-        with open(config.LSWS_VHOST_DIR + user.username + '_' + vhost['name'] + '.xml', 'w') as vhost_file:
-            vhost_file.write(vhost_template.render(vhost_data))
-            vhost_file.close()
+    # load main LSWS config
+    httpd_config = etree.parse(config.LSWS_CONFIG_PATH, etree.XMLParser(remove_blank_text=True))
+    # print etree.tostring(httpd_config, pretty_print=True)
 
-        with open(user.info()[5] + '/domains/' + vhost['name'] + '/index.html', 'w') as vhost_file:
-            vhost_file.write(index_template.render(vhost_data))
-            vhost_file.close()
-        os.chown(user.info()[5] + '/domains/' + vhost['name'] + '/index.html', user.info()[2], user.info()[3])
-        os.chmod(user.info()[5] + '/domains/' + vhost['name'] + '/index.html', 0644)
+    # Unbind all vhost configs
+    for virtualHost in httpd_config.find('virtualHostList').findall('virtualHost'):
+        if re.compile('/'+user.username+'_(.*)\.xml$').match(virtualHost.find('configFile').text):
+            httpd_config.find('virtualHostList').remove(virtualHost)
 
-        # add the vhost to main config
-        httpd_config = etree.parse(config.LSWS_CONFIG_PATH, etree.XMLParser(remove_blank_text=True))
-        # print etree.tostring(httpd_config, pretty_print=True)
+    if AccountObject['state'] not in ['suspended', 'deleted']:
+        for vhost in AccountObject['vhosts']:
+            # Create domain directory
+            library.basic.make_sure_path_exists(user.info()[5] + '/domains/' + vhost['name'])
+            os.chown(user.info()[5] + '/domains/' + vhost['name'], user.info()[2], user.info()[3])
+            os.chmod(user.info()[5] + '/domains', 0555)
 
-        # look for the vhost in config and remove it
-        # xpath("//virtualHostList/virtualHost[name='".$vhost['domain']."']")
-        for virtualHost in httpd_config.find('virtualHostList').findall('virtualHost'):
-            #logger.info('Name: ' + virtualHost.find('name').text)
-            if virtualHost.find('name').text == vhost['name']:
-                httpd_config.find('virtualHostList').remove(virtualHost)
-                #logger.info("removing vhost")
+            # So called environment for jinja2 template
+            vhost_data = {
+                "username": user.username,
+                "homedir": user.info()[5],
+                "name": vhost['name'],
+                "index_files": "index.php, index.html",
+                "appmap": vhost['appmap']
+            }
+            with open(config.LSWS_VHOST_DIR + user.username + '_' + vhost['name'] + '.xml', 'w') as vhost_file:
+                vhost_file.write(vhost_template.render(vhost_data))
+                vhost_file.close()
 
-        # look for listener and remove it
-        # $lshttpd_config->xpath("//vhostMap[vhost='".$vhost['domain']."']")
-        for listener in httpd_config.find('listenerList').findall('listener'):
-            for mapping in listener.find('vhostMapList').findall('vhostMap'):
-                if mapping.find('vhost').text == vhost['name']:
-                    listener.find('vhostMapList').remove(mapping)
+            with open(user.info()[5] + '/domains/' + vhost['name'] + '/index.html', 'w') as vhost_file:
+                vhost_file.write(index_template.render(vhost_data))
+                vhost_file.close()
+            os.chown(user.info()[5] + '/domains/' + vhost['name'] + '/index.html', user.info()[2], user.info()[3])
+            os.chmod(user.info()[5] + '/domains/' + vhost['name'] + '/index.html', 0644)
+
+            # look for the vhost in config and remove it
+            # xpath("//virtualHostList/virtualHost[name='".$vhost['domain']."']")
+            for virtualHost in httpd_config.find('virtualHostList').findall('virtualHost'):
+                #logger.info('Name: ' + virtualHost.find('name').text)
+                if virtualHost.find('name').text == vhost['name']:
+                    httpd_config.find('virtualHostList').remove(virtualHost)
                     #logger.info("removing vhost")
 
-        # add new vhost to the config file
-        newVH = etree.fromstring('''
-        <virtualHost>
-            <name></name>
-            <vhRoot></vhRoot>
-            <configFile></configFile>
-            <note/>
-            <allowSymbolLink>2</allowSymbolLink>
-            <enableScript>1</enableScript>
-            <restrained>1</restrained>
-            <maxKeepAliveReq/>
-            <smartKeepAlive>1</smartKeepAlive>
-            <setUIDMode>2</setUIDMode>
-            <chrootMode>0</chrootMode>
-            <chrootPath/>
-            <staticReqPerSec/>
-            <dynReqPerSec/>
-            <outBandwidth/>
-            <inBandwidth/>
-        </virtualHost>
-        ''')
-        newVH.find('name').text = vhost['name']
-        newVH.find('vhRoot').text = user.info()[5] + '/domains/' + vhost['name']
-        newVH.find('configFile').text = config.LSWS_VHOST_DIR + user.username + '_' + vhost['name'] + '.xml'
-        #tmpE = etree.Element('name')
-        #tmpE.text = vhost['name']
-        #newVH.append(tmpE)
-        httpd_config.find('virtualHostList').append(newVH)
+            # look for listener and remove it
+            # $lshttpd_config->xpath("//vhostMap[vhost='".$vhost['domain']."']")
+            for listener in httpd_config.find('listenerList').findall('listener'):
+                for mapping in listener.find('vhostMapList').findall('vhostMap'):
+                    if mapping.find('vhost').text == vhost['name']:
+                        listener.find('vhostMapList').remove(mapping)
+                        #logger.info("removing vhost")
 
-        # Add new vhost to the first listener available (this is stupid)
-        # TODO: improve & SSL support
-        newVHMapping = etree.fromstring('''
-        <vhostMap>
-          <vhost></vhost>
-          <domain></domain>
-        </vhostMap>
-        ''')
-        newVHMapping.find('vhost').text = vhost['name']
-        newVHMapping.find('domain').text = ','.join(vhost['domains'])
-        httpd_config.find('listenerList').find('listener').find('vhostMapList').append(newVHMapping)
+            # add new vhost to the config file
+            newVH = etree.fromstring('''
+            <virtualHost>
+                <name></name>
+                <vhRoot></vhRoot>
+                <configFile></configFile>
+                <note/>
+                <allowSymbolLink>2</allowSymbolLink>
+                <enableScript>1</enableScript>
+                <restrained>1</restrained>
+                <maxKeepAliveReq/>
+                <smartKeepAlive>1</smartKeepAlive>
+                <setUIDMode>2</setUIDMode>
+                <chrootMode>0</chrootMode>
+                <chrootPath/>
+                <staticReqPerSec/>
+                <dynReqPerSec/>
+                <outBandwidth/>
+                <inBandwidth/>
+            </virtualHost>
+            ''')
+            newVH.find('name').text = vhost['name']
+            newVH.find('vhRoot').text = user.info()[5] + '/domains/' + vhost['name']
+            newVH.find('configFile').text = config.LSWS_VHOST_DIR + user.username + '_' + vhost['name'] + '.xml'
+            newVH.find('note').text = user.username
+            httpd_config.find('virtualHostList').append(newVH)
 
+            # Add new vhost to the first listener available (this is stupid)
+            # TODO: improve & SSL support
+            newVHMapping = etree.fromstring('''
+            <vhostMap>
+              <vhost></vhost>
+              <domain></domain>
+            </vhostMap>
+            ''')
+            newVHMapping.find('vhost').text = vhost['name']
+            newVHMapping.find('domain').text = ','.join(vhost['domains'])
+            httpd_config.find('listenerList').find('listener').find('vhostMapList').append(newVHMapping)
 
     ##### Delete obsolete domain directories under /domains #####
-    current_domain_dirs = os.listdir(user.info()[5] + '/domains/')
-    valid_domain_dirs = []
-    for vhost in AccountObject['vhosts']:
-        valid_domain_dirs.append(vhost['name'])
-    logger.info('Removing obsolete domain directories: ' + list(set(current_domain_dirs) - set(valid_domain_dirs)))
-    for directory in list(set(current_domain_dirs) - set(valid_domain_dirs)):
-        shutil.rmtree(os.path.join(user.info()[5] + '/domains/', directory), True)
+    try:
+        current_domain_dirs = os.listdir(user.info()[5] + '/domains/')
+        valid_domain_dirs = []
+        for vhost in AccountObject['vhosts']:
+            valid_domain_dirs.append(vhost['name'])
+        logger.info('Removing obsolete domain directories: ' + ', '.join(list(set(current_domain_dirs) - set(valid_domain_dirs))))
+        for directory in list(set(current_domain_dirs) - set(valid_domain_dirs)):
+            shutil.rmtree(os.path.join(user.info()[5] + '/domains/', directory), True)
+    except OSError:
+        pass
 
     ############################### deal with apps ###############################
     # look for all apps of this user and delete them
@@ -182,59 +195,90 @@ def WebAccount(self, **AccountObject):
         if re.compile('^' + user.username + '_').match(oldapp.find('name').text):
             httpd_config.find('extProcessorList').remove(oldapp)
 
+    # look for all php ini dirs of this user and delete them
+    for oldinidir in os.listdir('/opt/php/ini/'):
+        if re.compile('^' + user.username + '_').match(oldinidir):
+            shutil.rmtree(os.path.join('/opt/php/ini/', oldinidir), True)
+
     # add apps for this user
-    for app in AccountObject['apps']:
-        if app['type'] != 'php':
-            raise Exception('Unrecognized app type: ' + app['type'])
+    if AccountObject['state'] not in ['suspended', 'deleted']:
+        for app in AccountObject['apps']:
+            if app['type'] != 'php':
+                raise Exception('Unrecognized app type: ' + app['type'])
 
-        newProcessor = etree.fromstring('''
-        <extProcessor>
-            <type>lsapi</type>
-            <name>lsphp5_...</name>
-            <address>uds://tmp/lshttpd/somethinghere.sock</address>
-            <note/>
-            <maxConns>10</maxConns>
-            <env>PHP_LSAPI_MAX_REQUESTS=500</env>
-            <env>PHP_LSAPI_CHILDREN=10</env>
-            <env>LSAPI_AVOID_FORK=1</env>
-            <env>LSAPI_MAX_IDLE=300</env>
-            <env>LSAPI_ACCEPT_NOTIFY=0</env>
-            <env>PHP_INI_SCAN_DIR=/opt/php/ini/''' + user.username + '_' + strtosafe(app['name']) + '''</env>
-            <initTimeout>60</initTimeout>
-            <retryTimeout>0</retryTimeout>
-            <persistConn>1</persistConn>
-            <pcKeepAliveTimeout/>
-            <respBuffer>0</respBuffer>
-            <autoStart>1</autoStart>
-            <path>/opt/php/php-5.4.15/bin/lsphp</path>
-            <backlog>10</backlog>
-            <instances>1</instances>
-            <extUser>someuser</extUser>
-            <extGroup>somegrup</extGroup>
-            <runOnStartUp/>
-            <extMaxIdleTime>-1</extMaxIdleTime>
-            <priority>0</priority>
-            <memSoftLimit>6G</memSoftLimit>
-            <memHardLimit>8G</memHardLimit>
-            <procSoftLimit>800</procSoftLimit>
-            <procHardLimit>1000</procHardLimit>
-        </extProcessor>
-        ''')
+            newProcessor = etree.fromstring('''
+            <extProcessor>
+                <type>lsapi</type>
+                <name>lsphp5_...</name>
+                <address>uds://tmp/lshttpd/somethinghere.sock</address>
+                <note/>
+                <maxConns>10</maxConns>
+                <env>PHP_LSAPI_MAX_REQUESTS=500</env>
+                <env>PHP_LSAPI_CHILDREN=10</env>
+                <env>LSAPI_AVOID_FORK=1</env>
+                <env>LSAPI_MAX_IDLE=300</env>
+                <env>LSAPI_ACCEPT_NOTIFY=0</env>
+                <env>PHP_INI_SCAN_DIR=/opt/php/ini/''' + user.username + '_' + strtosafe(app['name']) + '''</env>
+                <initTimeout>60</initTimeout>
+                <retryTimeout>0</retryTimeout>
+                <persistConn>1</persistConn>
+                <pcKeepAliveTimeout/>
+                <respBuffer>0</respBuffer>
+                <autoStart>1</autoStart>
+                <path>/opt/php/php-5.4.15/bin/lsphp</path>
+                <backlog>10</backlog>
+                <instances>1</instances>
+                <extUser>someuser</extUser>
+                <extGroup>somegrup</extGroup>
+                <runOnStartUp/>
+                <extMaxIdleTime>-1</extMaxIdleTime>
+                <priority>0</priority>
+                <memSoftLimit>6G</memSoftLimit>
+                <memHardLimit>8G</memHardLimit>
+                <procSoftLimit>800</procSoftLimit>
+                <procHardLimit>1000</procHardLimit>
+            </extProcessor>
+            ''')
 
-        newProcessor.find('name').text = user.username + '_' + strtosafe(app['name'])
-        newProcessor.find('address').text = 'uds://tmp/lshttpd/lsphp5_' + user.username + '_' + strtosafe(app['name']) + '.sock'
-        newProcessor.find('path').text = '/opt/php/php-5.5/bin/lsphp'
-        newProcessor.find('extUser').text = user.username
-        newProcessor.find('extGroup').text = user.username
-        if not os.path.isfile('/opt/php/php-' + app['version'] + '/bin/lsphp'):
-            raise Exception('PHP version ' + app['version'] + ' is not available on this server.')
-        newProcessor.find('path').text = '/opt/php/php-' + app['version'] + '/bin/lsphp'
-        httpd_config.find('extProcessorList').append(newProcessor)
+            newProcessor.find('name').text = user.username + '_' + strtosafe(app['name'])
+            newProcessor.find('address').text = 'uds://tmp/lshttpd/lsphp5_' + user.username + '_' + strtosafe(app['name']) + '.sock'
+            newProcessor.find('path').text = '/opt/php/php-5.5/bin/lsphp'
+            newProcessor.find('extUser').text = user.username
+            newProcessor.find('extGroup').text = user.username
+            if not os.path.isfile('/opt/php/php-' + app['version'] + '/bin/lsphp'):
+                raise Exception('PHP version ' + app['version'] + ' is not available on this server.')
+            newProcessor.find('path').text = '/opt/php/php-' + app['version'] + '/bin/lsphp'
+            httpd_config.find('extProcessorList').append(newProcessor)
+
+            # install Pecl extensions
+
+            # install PEAR stuff
+
+            # Save php.ini
+            library.basic.make_sure_path_exists('/opt/php/ini/' + user.username + '_' + strtosafe(app['name']))
+            os.chown('/opt/php/ini/' + user.username + '_' + strtosafe(app['name']), 0, user.info()[3])
+            os.chmod('/opt/php/ini/' + user.username + '_' + strtosafe(app['name']), 0750)
+            ini = ConfigParser.ConfigParser()
+            for setting in app['ini']:
+                if setting['section'].upper() == 'DEFAULT':
+                    setting['section'] = 'PHP'
+                try:
+                    ini.add_section(setting['section'])
+                except DuplicateSectionError:
+                    pass
+                ini.set(setting['section'], setting['name'], setting['value'])
+
+            with open('/opt/php/ini/' + user.username + '_' + strtosafe(app['name']) + '/php.ini', 'w') as inifile:
+                    ini.write(inifile)
 
     #### End of LSWS operations ####
     # save global config
     httpd_config.write(config.LSWS_CONFIG_PATH, xml_declaration=True, pretty_print=True, encoding="UTF-8")
-    basic.run_command('/bin/kill -USR1 `/bin/cat /tmp/lshttpd/lshttpd.pid`')
+    # restart LSWS
+    if os.path.isfile('/tmp/lshttpd/lshttpd.pid'):
+        basic.run_command('/bin/kill -USR1 `/bin/cat /tmp/lshttpd/lshttpd.pid`')
+    else:
+        logger.warn('Not restarting LSWS - not running.')
 
     # deal with MySQL databases
 

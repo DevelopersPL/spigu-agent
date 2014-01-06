@@ -13,6 +13,7 @@ import library.basic as basic
 from templates import strtosafe
 import re
 import ConfigParser
+from library.database.mysql import MySQLManager as MySQLManager
 
 @agent.task
 def add(x, y):
@@ -183,8 +184,9 @@ def WebAccount(self, **AccountObject):
         valid_domain_dirs = []
         for vhost in AccountObject['vhosts']:
             valid_domain_dirs.append(vhost['name'])
-        logger.info('Removing obsolete domain directories: ' + ', '.join(list(set(current_domain_dirs) - set(valid_domain_dirs))))
+
         for directory in list(set(current_domain_dirs) - set(valid_domain_dirs)):
+            logger.info('Removing obsolete domain directory: ' + directory)
             shutil.rmtree(os.path.join(user.info()[5] + '/domains/', directory), True)
     except OSError:
         pass
@@ -280,5 +282,49 @@ def WebAccount(self, **AccountObject):
     else:
         logger.warn('Not restarting LSWS - not running.')
 
-    # deal with MySQL databases
+    ############################### MySQL ###############################
+    # deal with databases
+    mm = MySQLManager()
+    current_user_dbs = []
+    for db in mm.db_list():
+        if re.compile('^' + user.username + '_').match(db):
+            current_user_dbs.append(db)
 
+    user_dbs = []
+    for db in AccountObject['mysqldbs']:
+        user_dbs.append(user.username + '_' + db['name'])
+
+    if AccountObject['state'] not in ['deleted']:
+        dbs_to_delete = set(current_user_dbs) - set(user_dbs)
+        for db in dbs_to_delete:
+            mm.db_delete(db)
+            logger.info('Deleted database ' + db)
+
+        for db in AccountObject['mysqldbs']:
+            if user.username+'_'+db['name'] not in current_user_dbs:
+                mm.db_create(user.username + '_' + db['name'], 'utf8')
+                logger.info('Creating database ' + db['name'])
+    else:
+        # delete all databases
+        for db in current_user_dbs:
+            mm.db_delete(db)
+            logger.info('Deleted database ' + db)
+
+    # deal with users
+    current_user_users = mm.user_find_like(user.username + '_%') # ((user, host), (user, host)...)
+    if AccountObject['state'] not in ['deleted']:
+        for u in current_user_users:
+            if u[0] not in user_dbs:
+                mm.user_delete(u[0], u[1])
+                logger.info('Deleted %s @ %s', (u[0], u[1]))
+
+        for u in AccountObject['mysqldbs']:
+            privs = mm.privileges_unpack(user.username + '_' + u['name'] + '.*:ALL')
+            if not mm.user_exists(user.username + '_' + u['name'], ''):
+                mm.user_add(user.username + '_' + u['name'], '', u['password'], privs)
+            else:
+                mm.user_mod(user.username + '_' + u['name'], '', u['password'], privs)
+    else:
+        for u in current_user_users:
+            mm.user_delete(u[0], u[1])
+            logger.info('Deleted %s @ %s', (u[0], u[1]))

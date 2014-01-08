@@ -320,10 +320,10 @@ def WebAccount(self, **AccountObject):
 
         for u in AccountObject['mysqldbs']:
             privs = mm.privileges_unpack(user.username + '_' + u['name'] + '.*:ALL')
-            if not mm.user_exists(user.username + '_' + u['name'], ''):
-                mm.user_add(user.username + '_' + u['name'], '', u['password'], privs)
+            if not mm.user_exists(user.username + '_' + u['name'], '%'):
+                mm.user_add(user.username + '_' + u['name'], '%', u['password'], privs)
             else:
-                mm.user_mod(user.username + '_' + u['name'], '', u['password'], privs)
+                mm.user_mod(user.username + '_' + u['name'], '%', u['password'], privs)
     else:
         for u in current_user_users:
             mm.user_delete(u[0], u[1])

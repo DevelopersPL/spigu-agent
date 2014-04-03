@@ -1,7 +1,7 @@
 __author__ = 'Daniel'
-BROKER_URL = 'amqp://guest@marley.dondaniello.com:5672/'
+BROKER_URL = 'amqp://guest@marley.dondaniello.com:5671/'
 # The default value is False
-BROKER_USE_SSL = False
+BROKER_USE_SSL = True
 
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT=['json']

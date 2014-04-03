@@ -1,5 +1,5 @@
 import grp
-import library.basic as basic
+import webhosting.library.basic as basic
 
 def group_exists(group):
     try:

@@ -1,7 +1,7 @@
 from jinja2 import Template, Environment, PackageLoader
 import re
 
-jinja_env = Environment(loader=PackageLoader('library', 'templates'),
+jinja_env = Environment(loader=PackageLoader('webhosting.library', 'templates'),
                         trim_blocks=True, lstrip_blocks=True)
 
 

@@ -1,28 +1,28 @@
 # -*- coding: utf-8 -*-
-import os, shutil
-import time
-from agent import agent
-from library.system.user import User
-from celery.utils.log import get_task_logger
-import library.basic
-logger = get_task_logger(__name__)
-from templates import vhost_template, index_template
-import config
-from lxml import etree
-import library.basic as basic
-from templates import strtosafe
-import re
-import ConfigParser
-from library.database.mysql import MySQLManager as MySQLManager
+from __future__ import absolute_import
+from celery import shared_task
 
-@agent.task
+import os, shutil, time, re, ConfigParser
+from lxml import etree
+
+from webhosting.library.system.user import User
+from webhosting.library.database.mysql import MySQLManager
+from webhosting.library import basic
+from webhosting.templates import vhost_template, index_template, strtosafe
+import webhosting.config as config
+
+
+from celery.utils.log import get_task_logger
+logger = get_task_logger(__name__)
+
+@shared_task
 def add(x, y):
     logger.info('Adding {0} + {1}'.format(x, y))
     logger.info('Waiting 10 seconds')
     time.sleep(10)
     return x + y
 
-@agent.task(throws=(KeyError), bind=True)
+@shared_task(throws=(KeyError), bind=True)
 def WebAccount(self, **AccountObject):
     #logger.info(repr(AccountObject))
 

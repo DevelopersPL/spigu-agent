@@ -3,8 +3,8 @@ import pwd
 import spwd
 import grp
 import shutil
-import library.system.group as group
-import library.basic as basic
+import webhosting.library.system.group as group
+import webhosting.library.basic as basic
 from crypt import crypt
 
 # This class is a representation of a real system account

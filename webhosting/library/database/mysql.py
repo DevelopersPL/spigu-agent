@@ -2,7 +2,7 @@ import os
 import re
 import ConfigParser
 import MySQLdb
-import library.basic as basic
+import webhosting.library.basic as basic
 
 class MySQLManager:
 

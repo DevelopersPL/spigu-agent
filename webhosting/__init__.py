@@ -1,2 +1,2 @@
-import tasks, user
+import user
 from spiguagent.celery import logger

@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import os
 
 from celery import Celery
-
+from kombu import Exchange, Queue
 from django.conf import settings
 
 # set the default Django settings module for the 'celery' program.
@@ -15,6 +15,7 @@ app = Celery('spiguagent')
 # pickle the object when using Windows.
 app.config_from_object('django.conf:settings')
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
+#app.conf.CELERY_QUEUES = tuple(Queue(i.keys()[0], Exchange('default'), routing_key=i.keys()[0]) for i in app.control.ping())
 
 from celery.utils.log import get_task_logger
 logger = get_task_logger(__name__)

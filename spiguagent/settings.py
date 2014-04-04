@@ -23,9 +23,9 @@ CELERYD_CONCURRENCY = 4
 # How many messages to prefetch at a time multiplied by the number of concurrent processes. The default is 4 (four messages for each process).
 CELERYD_PREFETCH_MULTIPLIER = 1
 
-CELERY_RESULT_BACKEND = 'amqp://guest@marley.dondaniello.com:5672/'
+CELERY_RESULT_BACKEND = 'amqp://guest@marley.dondaniello.com:5671/'
 CELERY_RESULT_SERIALIZER = 'json'
-#CELERY_RESULT_PERSISTENT = True
+CELERY_RESULT_PERSISTENT = True
 CELERY_TASK_RESULT_EXPIRES = 86400
 
 # The default value is False
@@ -37,8 +37,8 @@ CELERY_ACKS_LATE = True
 # Send events so the worker can be monitored by tools like celerymon.
 CELERY_SEND_EVENTS = True
 
-CELERY_DISABLE_RATE_LIMITS = True
-
+CELERY_DISABLE_RATE_LIMITS = False
+BROKER_HEARTBEAT = 10
 
 """
 Django settings for spiguagent project.
@@ -66,7 +66,7 @@ DEBUG = True
 
 TEMPLATE_DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition

@@ -36,7 +36,9 @@ def task_view(task):
                         request.POST or request.GET)
         # no multivalue
         kwargs = dict(((k, v) for k, v in kwargs.iteritems()), **options)
-        result = task.apply_async(kwargs=kwargs)
+        queue = kwargs['server']
+        del kwargs['server']
+        result = task.apply_async(kwargs=kwargs, queue=queue)
         return JsonResponse({'ok': 'true', 'task_id': result.task_id})
 
     return _applier

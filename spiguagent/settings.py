@@ -78,7 +78,8 @@ INSTALLED_APPS = (
 #    'django.contrib.sessions',
 #    'django.contrib.messages',
 #    'django.contrib.staticfiles',
-     'webhosting'
+     'webhosting',
+     'rest_framework'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -88,6 +89,7 @@ MIDDLEWARE_CLASSES = (
 #    'django.contrib.auth.middleware.AuthenticationMiddleware',
 #    'django.contrib.messages.middleware.MessageMiddleware',
 #    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+#    'spiguagent.logging.ExceptionLoggingMiddleware'
 )
 
 ROOT_URLCONF = 'spiguagent.urls'
@@ -108,13 +110,13 @@ DATABASES = {
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'pl'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Warsaw'
 
-USE_I18N = True
+USE_I18N = False
 
-USE_L10N = True
+USE_L10N = False
 
 USE_TZ = True
 
@@ -123,3 +125,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
 STATIC_URL = '/static/'
+
+REST_FRAMEWORK = {
+
+}

@@ -7,3 +7,5 @@
 {{name}} is now running on Spigu Web Cloud.
 </body>
 </html>
+<?php
+phpinfo();

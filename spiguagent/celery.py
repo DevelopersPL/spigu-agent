@@ -5,6 +5,7 @@ import os
 from celery import Celery
 from kombu import Exchange, Queue
 from django.conf import settings
+from celery.task.http import dispatch
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'spiguagent.settings')
@@ -23,3 +24,7 @@ logger = get_task_logger(__name__)
 @app.task(bind=True)
 def debug_task(self):
     print('Request: {0!r}'.format(self.request))
+
+@app.task(bind=True)
+def notify(self, task_id):
+    dispatch(url='http://marley.dondaniello.com:3000/api/agent/notify/' + task_id, method='POST').get()

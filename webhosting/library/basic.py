@@ -401,7 +401,7 @@ def run_command(args, check_rc=True, close_fds=False, executable=None, data=None
     Otherwise, the command will be run with shell=True when args is a string.
     Other arguments:
     - check_rc (boolean)  Whether to raise Exception in case of
-                          non zero RC.  Default is False.
+                          non zero RC.  Default is True.
     - close_fds (boolean) See documentation for subprocess.Popen().
                           Default is False.
     - executable (string) See documentation for subprocess.Popen().

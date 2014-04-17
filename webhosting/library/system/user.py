@@ -237,7 +237,7 @@ class User(object):
         cmd.append('--euid')
         cmd.append(self.username)
 
-        basic.run_command(cmd)
+        basic.run_command(cmd, check_rc=False)
 
         # Delete user now
         cmd = ['/usr/sbin/deluser']

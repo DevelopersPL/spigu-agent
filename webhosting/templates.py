@@ -17,7 +17,10 @@ def strtosafe(unsafestr):
     return re.sub(r'[^a-zA-Z0-9]+', '', unsafestr)
 jinja_env.filters['strtosafe'] = strtosafe
 
-vhost_template = jinja_env.get_template('vhost.xml')
-index_template = jinja_env.get_template('index.html')
+vhost_template = jinja_env.get_template('vhost.conf')
+index_template = jinja_env.get_template('index.php')
+php_ini_template = jinja_env.get_template('php/php.ini')
+php_fpm_template = jinja_env.get_template('php/php-fpm.conf')
+php_pool_template = jinja_env.get_template('php/pool.conf')
 
 # Template designer documentation: http://jinja.pocoo.org/docs/templates/

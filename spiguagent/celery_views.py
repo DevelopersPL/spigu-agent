@@ -1,4 +1,5 @@
 # Taken from https://raw.githubusercontent.com/celery/django-celery/3.1/djcelery/views.py
+# Modified!
 from __future__ import absolute_import, unicode_literals
 
 from functools import wraps
@@ -69,15 +70,16 @@ def is_task_successful(request, task_id):
 def task_status(request, task_id):
     """Returns task status and result in JSON format."""
     result = AsyncResult(task_id)
-    state, retval = result.state, result.result
-    response_data = dict(id=task_id, status=state, result=retval)
+    #print dir(result)
+    print result.state
+    state, retval, success = result.state, False, result.successful()
+    response_data = dict(task_id=task_id, status=state, result=retval, success=success)
     if state in states.EXCEPTION_STATES:
         traceback = result.traceback
         response_data.update({'result': safe_repr(retval),
                               'exc': get_full_cls_name(retval.__class__),
                               'traceback': traceback})
-    return JsonResponse({'task': response_data})
-
+    return JsonResponse(response_data)
 
 def registered_tasks(request):
     """View returning all defined tasks as a JSON object."""

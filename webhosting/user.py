@@ -4,6 +4,9 @@ import os
 from webhosting.library.system.user import User
 import webhosting.library.basic as basic
 
+from celery.utils.log import get_task_logger
+logger = get_task_logger(__name__)
+
 @shared_task(throws=(KeyError), bind=True)
 def create(self, **UserOptions):
     user_obj = {'username': UserOptions['username'],
@@ -19,11 +22,11 @@ def create(self, **UserOptions):
         user_obj['groups_out'].append('sftponly')
         user_obj['shell'] = '/bin/bash'
 
-    if UserOptions['state'] == 'active':
-        user_obj['expires'] = ''
-    else:
+    if UserOptions['state'] in ['suspended', 'locked']:
         # account is either locked or suspended, in both cases we want to disable login
         user_obj['expires'] = '1'
+    else:
+        user_obj['expires'] = ''
 
     user = User(user_obj)
     # state is not deleted - it means account should exist
@@ -49,6 +52,8 @@ def create(self, **UserOptions):
     basic.make_sure_path_exists(user.info()[5] + '/domains')
     os.chown(user.info()[5] + '/domains', user.info()[2], user.info()[3])
     os.chmod(user.info()[5] + '/domains', 0555)
+
+    basic.run_command('/sbin/start session-init-setup')
 
 @shared_task(throws=(KeyError), bind=True)
 def delete(self, **UserOptions):

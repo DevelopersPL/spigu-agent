@@ -6,10 +6,13 @@ import webhosting
 def create(self, **kwargs):
     webhosting.user.create(**kwargs)
     webhosting.vhost.create(**kwargs)
+    webhosting.mysql.create(**kwargs)
+    webhosting.php.setup(**kwargs)
     return True
 
 @shared_task(bind=True)
 def delete(self, **kwargs):
+    webhosting.mysql.delete(**kwargs)
     webhosting.vhost.delete(**kwargs)
     webhosting.user.delete(**kwargs)
     return True

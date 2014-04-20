@@ -10,6 +10,7 @@ urlpatterns = patterns('',
     url(r'^api/webhosting/vhost/delete/?$', views.webhosting_vhost_delete),
     url(r'^api/webhosting/mysql/create/?$', views.webhosting_mysql_create),
     url(r'^api/webhosting/mysql/delete/?$', views.webhosting_mysql_delete),
+    url(r'^api/webhosting/php/setup/?$', views.webhosting_php_setup),
 
     # Direct access to tasks
     url(r'^api/apply/(?P<task_name>.+?)/?$', celery_views.apply),

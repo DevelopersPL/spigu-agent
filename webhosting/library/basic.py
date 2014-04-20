@@ -474,9 +474,62 @@ def pretty_bytes(size):
             break
     return '%.2f %s' % (float(size)/ limit, suffix)
 
-def make_sure_path_exists(path):
+def ensure_path(path):
     try:
         os.makedirs(path)
     except OSError as exception:
         if exception.errno != errno.EEXIST:
             raise
+
+def copytree(src, dst, symlinks=False, ignore=None):
+    names = os.listdir(src)
+    if ignore is not None:
+        ignored_names = ignore(src, names)
+    else:
+        ignored_names = set()
+
+    ensure_path(dst)
+    errors = []
+    for name in names:
+        if name in ignored_names:
+            continue
+        srcname = os.path.join(src, name)
+        dstname = os.path.join(dst, name)
+        try:
+            if symlinks and os.path.islink(srcname):
+                if os.path.exists(dstname):
+                    os.remove(dstname)
+                linkto = os.readlink(srcname)
+                os.symlink(linkto, dstname)
+            elif os.path.isdir(srcname):
+                copytree(srcname, dstname, symlinks, ignore)
+            else:
+                if os.path.exists(dstname):
+                    os.remove(dstname)
+                shutil.copy2(srcname, dstname)
+            # XXX What about devices, sockets etc.?
+        except (IOError, os.error) as why:
+            errors.append((srcname, dstname, str(why)))
+        # catch the Error from the recursive copytree so that we can
+        # continue with other files
+        except shutil.Error as err:
+            errors.extend(err.args[0])
+    try:
+        shutil.copystat(src, dst)
+    except WindowsError:
+        # can't copy file access times on Windows
+        pass
+    except OSError as why:
+        errors.extend((src, dst, str(why)))
+    if errors:
+        raise shutil.Error(errors)
+
+def rec_chown(path, uid, gid):
+        os.chown(path, uid, gid)
+        for item in os.listdir(path):
+            itempath = os.path.join(path, item)
+            if os.path.isfile(itempath):
+                os.chown(itempath, uid, gid)
+            elif os.path.isdir(itempath):
+                os.chown(itempath, uid, gid)
+                rec_chown(itempath, uid, gid)

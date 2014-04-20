@@ -22,5 +22,6 @@ index_template = jinja_env.get_template('index.php')
 php_ini_template = jinja_env.get_template('php/php.ini')
 php_fpm_template = jinja_env.get_template('php/php-fpm.conf')
 php_pool_template = jinja_env.get_template('php/pool.conf')
+php_upstart_template = jinja_env.get_template('php/upstart.conf')
 
 # Template designer documentation: http://jinja.pocoo.org/docs/templates/

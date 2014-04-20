@@ -24,7 +24,7 @@ def create(self, **UserOptions):
     if UserOptions['state'] not in ['suspended', 'terminated']:
         for vhost in UserOptions['vhosts']:
             # Create domain directory
-            basic.make_sure_path_exists(user.info()[5] + '/domains/' + vhost['name'] + '/public_html')
+            basic.ensure_path(user.info()[5] + '/domains/' + vhost['name'] + '/public_html')
             os.chown(user.info()[5] + '/domains/' + vhost['name'], user.info()[2], user.info()[3])
             os.chmod(user.info()[5] + '/domains', 0555)
 
@@ -35,14 +35,12 @@ def create(self, **UserOptions):
                 "name": vhost['name']
             }
 
-            with open(vhost_dir + user.username + '_' + vhost['name'] + '.conf', 'w') as vhost_file:
-                vhost_file.write(vhost_template.render(vhost_data))
-                vhost_file.close()
+            with open(vhost_dir + user.username + '_' + vhost['name'] + '.conf', 'w') as f:
+                f.write(vhost_template.render(vhost_data))
 
             if not os.path.exists(user.info()[5] + '/domains/' + vhost['name'] + '/public_html/index.php'):
-                with open(user.info()[5] + '/domains/' + vhost['name'] + '/public_html/index.php', 'w') as vhost_file:
-                    vhost_file.write(index_template.render(vhost_data))
-                    vhost_file.close()
+                with open(user.info()[5] + '/domains/' + vhost['name'] + '/public_html/index.php', 'w') as f:
+                    f.write(index_template.render(vhost_data))
 
             os.chown(user.info()[5] + '/domains/' + vhost['name'] + '/public_html/index.php', user.info()[2], user.info()[3])
             os.chmod(user.info()[5] + '/domains/' + vhost['name'] + '/public_html/index.php', 0644)
@@ -60,7 +58,7 @@ def create(self, **UserOptions):
     basic.run_command('/bin/setfacl -m u:www-data:rX /home/' + user.username)
 
     # Make sure domains directory exists
-    basic.make_sure_path_exists(user.info()[5] + '/domains')
+    basic.ensure_path(user.info()[5] + '/domains')
     os.chown(user.info()[5] + '/domains', user.info()[2], user.info()[3])
     os.chmod(user.info()[5] + '/domains', 0555)
 

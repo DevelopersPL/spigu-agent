@@ -216,7 +216,8 @@ class User(object):
                     for d in dirs:
                         os.chown(info[5], info[2], info[3])
                     for f in files:
-                        os.chown(os.path.join(root, f), info[2], info[3])
+                        if os.path.exists(f):
+                            os.chown(os.path.join(root, f), info[2], info[3])
             except OSError as e:
                 raise e
 

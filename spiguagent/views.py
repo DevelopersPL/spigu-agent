@@ -58,3 +58,8 @@ def webhosting_mysql_create(request, **options):
 def webhosting_mysql_delete(request, **options):
     result = webhosting.mysql.delete.apply_async(kwargs=request.DATA, queue=request.DATA['server'])
     return JSONResponse({'ok': 'true', 'task_id': result.task_id})
+
+@api_view(['POST'])
+def webhosting_php_setup(request, **options):
+    result = webhosting.php.setup.apply_async(kwargs=request.DATA, queue=request.DATA['server'])
+    return JSONResponse({'ok': 'true', 'task_id': result.task_id})

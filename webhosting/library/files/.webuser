@@ -1,0 +1,8 @@
+#!/bin/bash
+alias initctl='/sbin/initctl'
+alias start='/sbin/start'
+alias stop='/sbin/stop'
+alias status='/sbin/status'
+alias restart='/sbin/restart'
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export UPSTART_SESSION=`initctl list-sessions | awk -F' ' '{ print $2 }'`

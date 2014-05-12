@@ -21,7 +21,7 @@ def create(self, **UserOptions):
         privs = mm.privileges_unpack(dbname + '.*:ALL')
         if not mm.user_exists(dbname, '%'):
             mm.user_add(dbname, '%', db['password'], privs)
-            logger.info('Created user %s @ %s', (dbname, '%'))
+            logger.info('Created user %s @ %s', dbname, '%')
         else:
             mm.user_mod(dbname, '%', db['password'], privs)
 
@@ -40,4 +40,4 @@ def delete(self, **UserOptions):
 
         if mm.user_exists(dbname, '%'):
             mm.user_delete(dbname, '%')
-            logger.info('Deleted user %s@%s', (dbname, '%'))
+            logger.info('Deleted user %s@%s', dbname, '%')

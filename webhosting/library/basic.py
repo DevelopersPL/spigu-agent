@@ -33,19 +33,14 @@ BOOLEANS_FALSE = ['no', 'off', '0', 'false', 0]
 BOOLEANS = BOOLEANS_TRUE + BOOLEANS_FALSE
 
 import os
-import re
-import shlex
 import subprocess
 import sys
-import syslog
 import types
 import time
 import shutil
 import stat
-import traceback
 import grp
 import pwd
-import platform
 import errno
 
 
@@ -528,7 +523,9 @@ def rec_chown(path, uid, gid):
         os.chown(path, uid, gid)
         for item in os.listdir(path):
             itempath = os.path.join(path, item)
-            if os.path.isfile(itempath):
+            if os.path.islink(itempath):
+                pass
+            elif os.path.isfile(itempath):
                 os.chown(itempath, uid, gid)
             elif os.path.isdir(itempath):
                 os.chown(itempath, uid, gid)

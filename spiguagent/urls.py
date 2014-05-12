@@ -6,6 +6,8 @@ urlpatterns = patterns('',
     # Wrappers around actions
     url(r'^api/webhosting/create/?$', views.webhosting_create),
     url(r'^api/webhosting/delete/?$', views.webhosting_delete),
+    url(r'^api/webhosting/snapshot/?$', views.webhosting_snapshot),
+    url(r'^api/webhosting/unsnapshot/?$', views.webhosting_unsnapshot),
     url(r'^api/webhosting/vhost/create/?$', views.webhosting_vhost_create),
     url(r'^api/webhosting/vhost/delete/?$', views.webhosting_vhost_delete),
     url(r'^api/webhosting/mysql/create/?$', views.webhosting_mysql_create),

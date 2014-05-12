@@ -63,3 +63,13 @@ def webhosting_mysql_delete(request, **options):
 def webhosting_php_setup(request, **options):
     result = webhosting.php.setup.apply_async(kwargs=request.DATA, queue=request.DATA['server'])
     return JSONResponse({'ok': 'true', 'task_id': result.task_id})
+
+@api_view(['POST'])
+def webhosting_snapshot(request, **options):
+    result = webhosting.user.snapshot(kwargs=request.DATA, queue=request.DATA['server'])
+    return JSONResponse({'ok': 'true', 'task_id': result.task_id})
+
+@api_view(['POST'])
+def webhosting_unsnapshot(request, **options):
+    result = webhosting.user.unsnapshot(kwargs=request.DATA, queue=request.DATA['server'])
+    return JSONResponse({'ok': 'true', 'task_id': result.task_id})

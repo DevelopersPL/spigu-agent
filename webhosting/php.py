@@ -33,6 +33,21 @@ def setup(self, **UserOptions):
     with open('/home/' + user.username + '/.config/upstart/php5-fpm.conf', 'w') as f:
         f.write(templates.php_upstart_template.render(template_data))
 
-    #basic.rec_chown(user.info()[5], user.info()[2], user.info()[3])
-    #basic.run_command('/sbin/start session-init-setup')
-    basic.run_command("XDG_RUNTIME_DIR=/run/user/`id -u "+user.username+"` UPSTART_SESSION=`initctl list-sessions | awk -F' ' '{ print $2 }'` restart php5-fpm || start php5-fpm", executable='/bin/bash')
+    basic.rec_chown(user.info()[5] + '/.config/php5', user.info()[2], user.info()[3])
+    '''
+    try:
+        basic.run_command("XDG_RUNTIME_DIR=/run/user/`id -u "+user.username+"` UPSTART_SESSION=`initctl list-sessions | awk -F' ' '{ print $2 }'` restart php5-fpm", executable='/bin/bash')
+    except Exception:
+        basic.run_command("XDG_RUNTIME_DIR=/run/user/`id -u "+user.username+"` UPSTART_SESSION=`initctl list-sessions | awk -F' ' '{ print $2 }'` start php5-fpm", executable='/bin/bash')
+    '''
+
+    # stop PHP (and other daemons)
+    try:
+        basic.run_command('stop session-init USER=' + user.username, executable='/bin/bash')
+    except Exception:
+        pass
+
+    # and start
+    basic.run_command('start session-init USER=' + user.username, executable='/bin/bash')
+
+    basic.run_command('/bin/setfacl -m u:www-data:rX /home/' + user.username + '/.cache')

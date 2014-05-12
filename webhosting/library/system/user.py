@@ -102,6 +102,14 @@ class User(object):
                 pass
         return info
 
+    def pwd_info(self):
+        """
+        http://docs.python.org/dev/library/pwd.html
+        """
+        if not self.exists():
+            return False
+        return pwd.getpwnam(self.username)
+
     def shadow_info(self):
         """
         http://docs.python.org/dev/library/spwd.html
@@ -183,7 +191,7 @@ class User(object):
 
         if isinstance(self.groups_in, (list, tuple)) and isinstance(self.groups_out, (list, tuple)):
             current_groups = self.get_current_groups()
-            groups = set(current_groups) | set(self.groups_in) - set(self.groups_out)
+            groups = set(current_groups).union(self.groups_in).difference(self.groups_out)
 
             if groups != set(current_groups):
                 cmd.append('-G')

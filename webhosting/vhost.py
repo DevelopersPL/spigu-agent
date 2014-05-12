@@ -30,9 +30,12 @@ def create(self, **UserOptions):
 
             # So called environment for jinja2 template
             vhost_data = {
-                "username": user.username,
-                "homedir": user.info()[5],
-                "name": vhost['name']
+                'username': user.username,
+                'homedir': user.info()[5],
+                'name': vhost['name'],
+                'domains': vhost['domains'],
+                'rewrite_catchall': vhost.get('rewrite_catchall', '=404'),
+                'ssl': UserOptions.get('ssl', False)
             }
 
             with open(vhost_dir + user.username + '_' + vhost['name'] + '.conf', 'w') as f:
@@ -44,6 +47,27 @@ def create(self, **UserOptions):
 
             os.chown(user.info()[5] + '/domains/' + vhost['name'] + '/public_html/index.php', user.info()[2], user.info()[3])
             os.chmod(user.info()[5] + '/domains/' + vhost['name'] + '/public_html/index.php', 0644)
+
+            """
+            if vhost.get('ssl', False):
+                with open('/etc/nginx/ssl/' + vhost['name'] + '.pem', 'w') as f:
+                    f.write(vhost.get('ssl_pem'))
+                os.chmod('/etc/nginx/ssl/' + vhost['name'] + '.pem', 0600)
+
+                with open('/etc/nginx/ssl/' + vhost['name'] + '.key', 'w') as f:
+                    f.write(vhost.get('ssl_key'))
+                os.chmod('/etc/nginx/ssl/' + vhost['name'] + '.key', 0600)
+            """
+
+            if UserOptions.get('ssl', False):
+                with open('/etc/nginx/ssl/' + vhost['name'] + '.pem', 'w') as f:
+                    f.write(UserOptions.get('ssl_pem'))
+                os.chmod('/etc/nginx/ssl/' + vhost['name'] + '.pem', 0600)
+
+                with open('/etc/nginx/ssl/' + vhost['name'] + '.key', 'w') as f:
+                    f.write(UserOptions.get('ssl_key'))
+                os.chmod('/etc/nginx/ssl/' + vhost['name'] + '.key', 0600)
+
 
             try:
                 basic.run_command('/usr/sbin/nginx -t')
@@ -67,6 +91,12 @@ def delete(self, **UserOptions):
     user = User({'username': UserOptions['username']})
     for vhost in UserOptions['vhosts']:
         os.remove(vhost_dir + user.username + '_' + vhost['name'] + '.conf')
+
+        if os.path.exists('/etc/nginx/ssl/' + vhost['name'] + '.pem'):
+             os.unlink('/etc/nginx/ssl/' + vhost['name'] + '.pem')
+
+        if os.path.exists('/etc/nginx/ssl/' + vhost['name'] + '.key'):
+             os.unlink('/etc/nginx/ssl/' + vhost['name'] + '.key')
 
         try:
             logger.info('Removing domain directory for ' + vhost['name'])

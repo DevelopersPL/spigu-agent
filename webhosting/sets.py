@@ -11,6 +11,18 @@ def create(self, **kwargs):
     return True
 
 @shared_task(bind=True)
+def lock(self, **kwargs):
+    webhosting.user.create(**kwargs)
+    return True
+
+@shared_task(bind=True)
+def suspend(self, **kwargs):
+    webhosting.mysql.userdelete(**kwargs)
+    webhosting.vhost.delete(remove_dirs=False, **kwargs)
+    webhosting.user.create(**kwargs)
+    return True
+
+@shared_task(bind=True)
 def delete(self, **kwargs):
     webhosting.mysql.delete(**kwargs)
     webhosting.vhost.delete(**kwargs)

@@ -87,7 +87,7 @@ def create(self, **UserOptions):
     os.chmod(user.info()[5] + '/domains', 0555)
 
 @shared_task(throws=(KeyError), bind=True)
-def delete(self, **UserOptions):
+def delete(self, remove_dirs=True, **UserOptions):
     user = User({'username': UserOptions['username']})
     for vhost in UserOptions['vhosts']:
         os.remove(vhost_dir + user.username + '_' + vhost['name'] + '.conf')
@@ -98,11 +98,12 @@ def delete(self, **UserOptions):
         if os.path.exists('/etc/nginx/ssl/' + vhost['name'] + '.key'):
              os.unlink('/etc/nginx/ssl/' + vhost['name'] + '.key')
 
-        try:
-            logger.info('Removing domain directory for ' + vhost['name'])
-            shutil.rmtree(os.path.join(user.info()[5] + '/domains/', vhost['name']), True)
-        except OSError:
-            pass
+        if remove_dirs:
+            try:
+                logger.info('Removing domain directory for ' + vhost['name'])
+                shutil.rmtree(os.path.join(user.info()[5] + '/domains/', vhost['name']), True)
+            except OSError:
+                pass
 
     basic.run_command('/usr/sbin/nginx -t')
     basic.run_command('/usr/sbin/nginx -s reload')

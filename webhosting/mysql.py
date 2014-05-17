@@ -41,3 +41,16 @@ def delete(self, **UserOptions):
         if mm.user_exists(dbname, '%'):
             mm.user_delete(dbname, '%')
             logger.info('Deleted user %s@%s', dbname, '%')
+
+@shared_task(throws=(KeyError), bind=True)
+def userdelete(self, **UserOptions):
+    user_obj = {'username': UserOptions['username']}
+    user = User(user_obj)
+    mm = MySQLManager()
+
+    # delete all users
+    for db in UserOptions['mysqldbs']:
+        dbname = user.username + '_' + db['name']
+        if mm.user_exists(dbname, '%'):
+            mm.user_delete(dbname, '%')
+            logger.info('Deleted user %s@%s', dbname, '%')

@@ -35,6 +35,16 @@ def webhosting_create(request, **options):
     return JSONResponse({'ok': 'true', 'task_id': result.task_id})
 
 @api_view(['POST'])
+def webhosting_lock(request, **options):
+    result = webhosting.sets.lock.apply_async(kwargs=request.DATA, queue=request.DATA['server'])
+    return JSONResponse({'ok': 'true', 'task_id': result.task_id})
+
+@api_view(['POST'])
+def webhosting_suspend(request, **options):
+    result = webhosting.sets.suspend.apply_async(kwargs=request.DATA, queue=request.DATA['server'])
+    return JSONResponse({'ok': 'true', 'task_id': result.task_id})
+
+@api_view(['POST'])
 def webhosting_delete(request, **options):
     result = webhosting.sets.delete.apply_async(kwargs=request.DATA, queue=request.DATA['server'])
     return JSONResponse({'ok': 'true', 'task_id': result.task_id})
@@ -66,10 +76,10 @@ def webhosting_php_setup(request, **options):
 
 @api_view(['POST'])
 def webhosting_snapshot(request, **options):
-    result = webhosting.user.snapshot(kwargs=request.DATA, queue=request.DATA['server'])
+    result = webhosting.user.snapshot.apply_async(kwargs=request.DATA, queue=request.DATA['server'])
     return JSONResponse({'ok': 'true', 'task_id': result.task_id})
 
 @api_view(['POST'])
 def webhosting_unsnapshot(request, **options):
-    result = webhosting.user.unsnapshot(kwargs=request.DATA, queue=request.DATA['server'])
+    result = webhosting.user.unsnapshot.apply_async(kwargs=request.DATA, queue=request.DATA['server'])
     return JSONResponse({'ok': 'true', 'task_id': result.task_id})

@@ -85,7 +85,7 @@ def snapshot(self, **UserOptions):
         logger.info('Snapshotting user: ' + user.username)
         if not os.path.exists('/mnt/snapshots/' + user.username):
             basic.run_command('/sbin/btrfs subvolume snapshot -r ' + user.pwd_info().pw_dir + ' /mnt/snapshots/' + user.username)
-            basic.run_command('/sbin/btrfs qgroup assign 0/' + btrfs.get_subvolume_id('/mnt/snapshots/' + user.username) + ' 1/' + user.pwd_info().pw_uid + ' /mnt/snapshots/' + user.username)
+            basic.run_command('/sbin/btrfs qgroup assign 0/' + str(btrfs.get_subvolume_id('/mnt/snapshots/' + user.username)) + ' 1/' + str(user.pwd_info().pw_uid) + ' /mnt/snapshots/' + user.username)
 
             if os.path.exists(user.pwd_info().pw_dir + '/snapshot'):
                 os.unlink(user.pwd_info().pw_dir + '/snapshot')

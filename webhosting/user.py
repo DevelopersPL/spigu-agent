@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from celery import shared_task
 import os
 import shutil
+import fileinput
 from webhosting.library.system.user import User
 import webhosting.library.basic as basic
 import webhosting.library.system.btrfs as btrfs
@@ -67,6 +68,16 @@ def create(self, **UserOptions):
 
     basic.run_command('/sbin/start session-init-setup')
 
+    if UserOptions.get('block_mail', False):
+        # Make sure user exists in /etc/postfix/banned_users file to block access to maildrop
+        with open('/etc/postfix/banned_users', 'a+') as f:
+            if not any(user.username == x.strip() for x in f):
+                f.write(user.username + '\n')
+    else:
+        for line in fileinput.input('/etc/postfix/banned_users', inplace=True):
+            if line.strip() != user.username:
+               print line.strip()
+
 @shared_task(throws=(KeyError), bind=True)
 def delete(self, **UserOptions):
     user = User({'username': UserOptions['username']})
@@ -77,6 +88,11 @@ def delete(self, **UserOptions):
         user.delete()
         # user's group is deleted automatically by deluser
         basic.run_command('/sbin/btrfs qgroup destroy 1/' + str(user.pwd_info().pw_uid) + ' ' + user.pwd_info().pw_dir, check_rc=False)
+
+    # Get rid of user from banned_users file
+    for line in fileinput.input('/etc/postfix/banned_users', inplace=True):
+        if line.strip() != user.username:
+           print line.strip()
 
 @shared_task(throws=(KeyError), bind=True)
 def snapshot(self, **UserOptions):

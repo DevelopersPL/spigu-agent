@@ -37,12 +37,12 @@ def create(self, **UserOptions):
     # state is not deleted - it means account should exist
     if not user.exists():
         logger.info('Creating user: ' + user.username)
-        if not os.path.exists('/home/' + user.username):
-            basic.run_command('/sbin/btrfs subvolume create /home/' + user.username)
+#        if not os.path.exists('/home/' + user.username):
+#            basic.run_command('/sbin/btrfs subvolume create /home/' + user.username)
         user.create()
-        basic.copytree('/etc/skel', user.pwd_info().pw_dir, symlinks=True) # since the homedir existed before user.create(), adduser does not copy skel
-        basic.run_command('/sbin/btrfs qgroup create 1/' + str(user.pwd_info().pw_uid) + ' ' + user.pwd_info().pw_dir)
-        basic.run_command('/sbin/btrfs qgroup assign 0/' + str(btrfs.get_subvolume_id(user.pwd_info().pw_dir)) + ' 1/' + str(user.pwd_info().pw_uid) + ' ' + user.pwd_info().pw_dir)
+#        basic.copytree('/etc/skel', user.pwd_info().pw_dir, symlinks=True) # since the homedir existed before user.create(), adduser does not copy skel
+#        basic.run_command('/sbin/btrfs qgroup create 1/' + str(user.pwd_info().pw_uid) + ' ' + user.pwd_info().pw_dir)
+#        basic.run_command('/sbin/btrfs qgroup assign 0/' + str(btrfs.get_subvolume_id(user.pwd_info().pw_dir)) + ' 1/' + str(user.pwd_info().pw_uid) + ' ' + user.pwd_info().pw_dir)
     else:
         # user exists - let's make sure it is exactly what it should be
         logger.info('Modifying user: ' + user.username)
@@ -50,7 +50,7 @@ def create(self, **UserOptions):
 
     # set quota
     quota = UserOptions['limits'].get('quota', 0)
-    basic.run_command('/sbin/btrfs qgroup limit ' + str(quota) + ' 1/' + str(user.pwd_info().pw_uid) + ' ' + user.pwd_info().pw_dir)
+#    basic.run_command('/sbin/btrfs qgroup limit ' + str(quota) + ' 1/' + str(user.pwd_info().pw_uid) + ' ' + user.pwd_info().pw_dir)
 
     # XATTRs - allow www-data to access userdir
     # setfacl -m u:www-data:rX /home/web34/
@@ -83,11 +83,11 @@ def delete(self, **UserOptions):
     user = User({'username': UserOptions['username']})
     if user.exists():
         logger.info('Deleting user: ' + user.username)
-        if os.path.exists(user.pwd_info().pw_dir):
-            basic.run_command('/sbin/btrfs subvolume delete ' + user.pwd_info().pw_dir)
+#        if os.path.exists(user.pwd_info().pw_dir):
+#            basic.run_command('/sbin/btrfs subvolume delete ' + user.pwd_info().pw_dir)
         user.delete()
         # user's group is deleted automatically by deluser
-        basic.run_command('/sbin/btrfs qgroup destroy 1/' + str(user.pwd_info().pw_uid) + ' ' + user.pwd_info().pw_dir, check_rc=False)
+#        basic.run_command('/sbin/btrfs qgroup destroy 1/' + str(user.pwd_info().pw_uid) + ' ' + user.pwd_info().pw_dir, check_rc=False)
 
     # Get rid of user from banned_users file
     for line in fileinput.input('/etc/postfix/banned_users', inplace=True):

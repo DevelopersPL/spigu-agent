@@ -85,6 +85,10 @@ def delete(self, **UserOptions):
     user = User({'username': UserOptions['username']})
     if user.exists():
         logger.info('Deleting user: ' + user.username)
+        try:
+            basic.run_command('/sbin/stop session-init USER=' + user.username)
+        except Exception:
+            pass
 #        if os.path.exists(user.pwd_info().pw_dir):
 #            basic.run_command('/sbin/btrfs subvolume delete ' + user.pwd_info().pw_dir)
         user.delete()

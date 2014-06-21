@@ -90,7 +90,10 @@ def create(self, **UserOptions):
 def delete(self, remove_dirs=True, **UserOptions):
     user = User({'username': UserOptions['username']})
     for vhost in UserOptions['vhosts']:
-        os.remove(vhost_dir + user.username + '_' + vhost['name'] + '.conf')
+        try:
+            os.remove(vhost_dir + user.username + '_' + vhost['name'] + '.conf')
+        except OSError:
+            pass
 
         if os.path.exists('/etc/nginx/ssl/' + vhost['name'] + '.pem'):
              os.unlink('/etc/nginx/ssl/' + vhost['name'] + '.pem')

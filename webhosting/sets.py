@@ -23,7 +23,7 @@ def suspend(self, **kwargs):
     return True
 
 @shared_task(bind=True)
-def delete(self, **kwargs):
+def terminate(self, **kwargs):
     webhosting.mysql.delete(**kwargs)
     webhosting.vhost.delete(**kwargs)
     webhosting.user.unsnapshot(**kwargs)

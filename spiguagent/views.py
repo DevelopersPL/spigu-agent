@@ -45,8 +45,8 @@ def webhosting_suspend(request, **options):
     return JSONResponse({'ok': 'true', 'task_id': result.task_id})
 
 @api_view(['POST'])
-def webhosting_delete(request, **options):
-    result = webhosting.sets.delete.apply_async(kwargs=request.DATA, queue=request.DATA['server'])
+def webhosting_terminate(request, **options):
+    result = webhosting.sets.terminate.apply_async(kwargs=request.DATA, queue=request.DATA['server'])
     return JSONResponse({'ok': 'true', 'task_id': result.task_id})
 
 @api_view(['POST'])

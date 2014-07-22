@@ -25,7 +25,7 @@ def create(self, **UserOptions):
         for vhost in UserOptions['vhosts']:
             # Create domain directory
             basic.ensure_path(user.info()[5] + '/domains/' + vhost['name'] + '/public_html')
-            os.chown(user.info()[5] + '/domains/' + vhost['name'], user.info()[2], user.info()[3])
+            basic.rec_chown(user.info()[5] + '/domains/' + vhost['name'], user.info()[2], user.info()[3])
             os.chmod(user.info()[5] + '/domains', 0555)
 
             # So called environment for jinja2 template

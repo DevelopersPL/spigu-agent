@@ -522,9 +522,12 @@ def copytree(src, dst, symlinks=False, ignore=None):
 def rec_chown(path, uid, gid):
         os.chown(path, uid, gid)
         for item in os.listdir(path):
-            itempath = os.path.join(path, item)
+            try:
+                itempath = os.path.join(path, item)
+            except UnicodeDecodeError:
+                continue
             if os.path.islink(itempath):
-                pass
+                continue
             elif os.path.isfile(itempath):
                 os.chown(itempath, uid, gid)
             elif os.path.isdir(itempath):

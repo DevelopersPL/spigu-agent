@@ -51,7 +51,7 @@ def create(self, **UserOptions):
     # set quota
     quota = UserOptions['limits'].get('quota', 0)
     basic.run_command('setquota -u ' + str(user.pwd_info().pw_uid) + ' ' + str(quota / 1024) + ' ' + str(quota / 1024) + ' 500000 500000 /')
-    basic.run_command('setquota -g ' + str(user.pwd_info().pw_uid) + ' ' + str(quota / 1024) + ' ' + str(quota / 1024) + ' 500000 500000 /')
+    basic.run_command('setquota -g ' + str(user.pwd_info().pw_gid) + ' ' + str(quota / 1024) + ' ' + str(quota / 1024) + ' 500000 500000 /')
 #    basic.run_command('/sbin/btrfs qgroup limit ' + str(quota) + ' 1/' + str(user.pwd_info().pw_uid) + ' ' + user.pwd_info().pw_dir)
 
     # XATTRs - allow www-data to access userdir

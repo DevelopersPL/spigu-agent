@@ -12,7 +12,7 @@ logger = get_task_logger(__name__)
 
 FILES_DIR = os.path.dirname(os.path.realpath(__file__)) + '/library/files/'
 
-@shared_task(throws=(KeyError), bind=True)
+@shared_task(throws=(KeyError), bind=True, default_retry_delay=5, rate_limit=5)
 def create(self, **UserOptions):
     user_obj = {'username': UserOptions['username'],
                 'password': UserOptions['password'],
@@ -68,7 +68,10 @@ def create(self, **UserOptions):
 
     basic.rec_chown(user.pwd_info().pw_dir, user.pwd_info().pw_uid, user.pwd_info().pw_gid)
 
-    basic.run_command('/sbin/start session-init-setup')
+    try:
+        basic.run_command('/sbin/start session-init-setup')
+    except Exception as exc:
+        raise self.retry(exc=exc)
 
     if UserOptions.get('block_mail', False):
         # Make sure user exists in /etc/postfix/banned_users file to block access to maildrop

@@ -103,8 +103,9 @@ def delete(self, remove_dirs=True, **UserOptions):
 
         if remove_dirs:
             try:
-                logger.info('Removing domain directory for ' + vhost['name'])
-                shutil.rmtree(os.path.join(user.info()[5] + '/domains/', vhost['name']), True)
+                logger.info(u'Removing domain directory for ' + vhost['name'])
+                #shutil.rmtree(os.path.join(user.info()[5] + '/domains/', vhost['name']), True)
+                basic.run_command('/bin/rm -rf \'' + os.path.join(user.info()[5] + '/domains/', vhost['name']) + '\'') # TODO
             except OSError:
                 pass
 

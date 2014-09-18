@@ -29,3 +29,9 @@ def terminate(self, **kwargs):
     webhosting.user.unsnapshot(**kwargs)
     webhosting.user.delete(**kwargs)
     return True
+
+@shared_task(bind=True, default_retry_delay=5, rate_limit=5)
+def transfer(self, **kwargs):
+    webhosting.user.transfer(**kwargs)
+    webhosting.mysql.transfer(**kwargs)
+    return True

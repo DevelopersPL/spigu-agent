@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from celery import shared_task
 from webhosting.library.database.mysql import MySQLManager
 from webhosting.library.system.user import User
-
+import webhosting.library.basic as basic
 from celery.utils.log import get_task_logger
 logger = get_task_logger(__name__)
 
@@ -54,3 +54,12 @@ def userdelete(self, **UserOptions):
         if mm.user_exists(dbname, '%'):
             mm.user_delete(dbname, '%')
             logger.info('Deleted user %s@%s', dbname, '%')
+
+@shared_task(throws=(KeyError), bind=True)
+def transfer(self, **UserOptions):
+    user_obj = {'username': UserOptions['username']}
+    user = User(user_obj)
+
+    for db in UserOptions['mysqldbs']:
+        dbname = user.username + '_' + db['name']
+        basic.run_command('/usr/bin/mysqldump -h' + UserOptions['source_host'] + ' -u' + dbname + ' -p' + db['password'] + ' ' + dbname + ' | /usr/bin/mysql --defaults-file=/root/.my.cnf ' + dbname)

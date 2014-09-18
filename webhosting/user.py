@@ -66,6 +66,20 @@ def create(self, **UserOptions):
 
     shutil.copyfile(FILES_DIR + '.webuser', user.pwd_info().pw_dir + '/.webuser')
 
+    basic.ensure_path(user.pwd_info().pw_dir + '/.ssh')
+    os.chmod(user.pwd_info().pw_dir + '/.ssh', 0700)
+    for key in UserOptions.get('public_keys', []):
+        with open(user.pwd_info().pw_dir + '/.ssh/authorized_keys2', 'a+') as f:
+            if not any(key == x.strip() for x in f):
+                f.write(key + '\n')
+                logger.info('Added key: ' + key)
+    if os.path.isfile(user.pwd_info().pw_dir + '/.ssh/authorized_keys2'):
+        for line in fileinput.input(user.pwd_info().pw_dir + '/.ssh/authorized_keys2', inplace=True):
+            if line.strip() in UserOptions.get('public_keys', []):
+                print line.strip()
+            else:
+                logger.info('Removed key: ' + line.strip())
+
     basic.rec_chown(user.pwd_info().pw_dir, user.pwd_info().pw_uid, user.pwd_info().pw_gid)
 
     try:
@@ -130,5 +144,14 @@ def unsnapshot(self, **UserOptions):
             basic.run_command('/sbin/btrfs subvolume delete /mnt/snapshots/' + user.username)
         if os.path.exists(user.pwd_info().pw_dir + '/snapshot'):
             os.unlink(user.pwd_info().pw_dir + '/snapshot')
+    else:
+        raise Exception('User does not exist.')
+
+@shared_task(throws=(KeyError), bind=True)
+def transfer(self, **UserOptions):
+    user = User({'username': UserOptions['username']})
+    if user.exists():
+        logger.info('Transferring (pulling) user: ' + user.username)
+        basic.run_command('/usr/bin/rsync -azhxq --delete ' + user.username + '@' + UserOptions['source_host'] + ':' + user.pwd_info().pw_dir + '/ ' + user.pwd_info().pw_dir)
     else:
         raise Exception('User does not exist.')

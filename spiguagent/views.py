@@ -83,3 +83,8 @@ def webhosting_snapshot(request, **options):
 def webhosting_unsnapshot(request, **options):
     result = webhosting.user.unsnapshot.apply_async(kwargs=request.DATA, queue=request.DATA['server'])
     return JSONResponse({'ok': 'true', 'task_id': result.task_id})
+
+@api_view(['POST'])
+def webhosting_transfer(request, **options):
+    result = webhosting.sets.transfer.apply_async(kwargs=request.DATA, queue=request.DATA['server'])
+    return JSONResponse({'ok': 'true', 'task_id': result.task_id})

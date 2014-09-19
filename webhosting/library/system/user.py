@@ -254,3 +254,6 @@ class User(object):
         cmd.append(self.username)
 
         basic.run_command(cmd)
+
+        # deluser is broken and does not delete symlinks
+        basic.run_command('/bin/rm -rf /home/' + self.username)

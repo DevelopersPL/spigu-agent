@@ -1,3 +1,4 @@
+import os
 from __future__ import absolute_import
 # ^^^ The above is required if you want to import from the celery
 # library.  If you don't have this then `from celery.schedules import`
@@ -5,7 +6,7 @@ from __future__ import absolute_import
 # for relative imports by default.
 
 # Celery settings
-BROKER_URL = 'amqp://guest@marley.dondaniello.com:5671/'
+BROKER_URL = os.environ['SPIGU_AGENT_AMQP_CONNECTION']
 # The default value is False
 BROKER_USE_SSL = True
 
@@ -23,7 +24,7 @@ CELERYD_CONCURRENCY = 4
 # How many messages to prefetch at a time multiplied by the number of concurrent processes. The default is 4 (four messages for each process).
 CELERYD_PREFETCH_MULTIPLIER = 1
 
-CELERY_RESULT_BACKEND = 'amqp://guest@marley.dondaniello.com:5671/'
+CELERY_RESULT_BACKEND = os.environ['SPIGU_AGENT_AMQP_CONNECTION']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_RESULT_PERSISTENT = True
 #CELERY_TASK_RESULT_EXPIRES = 86400

@@ -14,9 +14,10 @@ django-templatetag-sugar==1.0
 djangorestframework==3.0.5
 eventlet==0.14.0
 greenlet==0.4.2
-kombu==3.0.24
+kombu==3.0.30
 lockfile==0.9.1
 python-daemon==1.6
 pytz==2014.10
 raven==4.2.1
 wsgiref==0.1.2
+uwsgi==2.0.12

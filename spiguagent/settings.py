@@ -1,5 +1,5 @@
-import os
 from __future__ import absolute_import
+import os
 # ^^^ The above is required if you want to import from the celery
 # library.  If you don't have this then `from celery.schedules import`
 # becomes `proj.celery.schedules` in Python 2.x since it allows

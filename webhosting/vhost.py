@@ -101,7 +101,7 @@ def delete(self, remove_dirs=True, **UserOptions):
         if os.path.exists('/etc/nginx/ssl/' + vhost['name'] + '.key'):
              os.unlink('/etc/nginx/ssl/' + vhost['name'] + '.key')
 
-        if remove_dirs:
+        if remove_dirs and user.info() is not False:
             try:
                 logger.info(u'Removing domain directory for ' + vhost['name'])
                 #shutil.rmtree(os.path.join(user.info()[5] + '/domains/', vhost['name']), True)

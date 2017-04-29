@@ -26,7 +26,7 @@ def suspend(self, **kwargs):
 def terminate(self, **kwargs):
     webhosting.mysql.delete(**kwargs)
     webhosting.vhost.delete(**kwargs)
-    webhosting.user.unsnapshot(**kwargs)
+    #webhosting.user.unsnapshot(**kwargs)
     webhosting.user.delete(**kwargs)
     return True
 

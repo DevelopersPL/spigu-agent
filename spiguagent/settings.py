@@ -1,14 +1,15 @@
 from __future__ import absolute_import
 import os
+import logging
 # ^^^ The above is required if you want to import from the celery
 # library.  If you don't have this then `from celery.schedules import`
 # becomes `proj.celery.schedules` in Python 2.x since it allows
 # for relative imports by default.
 
 # Celery settings
-BROKER_URL = os.environ['SPIGU_AGENT_AMQP_CONNECTION']
+#BROKER_URL = os.environ['SPIGU_AGENT_AMQP_CONNECTION']
 # The default value is False
-BROKER_USE_SSL = True
+BROKER_USE_SSL = False
 
 CELERY_TASK_SERIALIZER = 'json'
 #: Only add pickle to this list if your broker is secured
@@ -24,7 +25,7 @@ CELERYD_CONCURRENCY = 4
 # How many messages to prefetch at a time multiplied by the number of concurrent processes. The default is 4 (four messages for each process).
 CELERYD_PREFETCH_MULTIPLIER = 1
 
-CELERY_RESULT_BACKEND = os.environ['SPIGU_AGENT_AMQP_CONNECTION']
+#CELERY_RESULT_BACKEND = os.environ['SPIGU_AGENT_AMQP_CONNECTION']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_RESULT_PERSISTENT = True
 #CELERY_TASK_RESULT_EXPIRES = 86400
@@ -180,4 +181,5 @@ LOGGING = {
 try:
     from local_settings import *  # noqa
 except ImportError:
+    logging.warn('Cannot load local_settings')
     pass

@@ -20,5 +20,5 @@ python-daemon==1.6
 pytz==2014.10
 raven==4.2.1
 wsgiref==0.1.2
-uwsgi==2.0.12
+uwsgi>=2.0.12
 MySQL-python==1.2.5
